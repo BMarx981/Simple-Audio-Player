@@ -1,3 +1,4 @@
+import java.util.*;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
@@ -21,9 +22,11 @@ public class Console {
   private JLabel label;
   private File f;
   private JFileChooser fc;
+  public static boolean wasStarted = false;
   public static String fileName;
   private File soundFile;
-  SoundPlay t = new SoundPlay();
+  SoundPlay playIt = new SoundPlay();
+  Thread t = new Thread(playIt);
   
   public Console() {
     
@@ -45,22 +48,29 @@ public class Console {
       }//end actionPerformed
     });//end actionListener
     
+    //********************Play Button****************
     button2 = new JButton("Play");
     
     button2.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent evnt) {
-        
-        t.start();
+        if(!wasStarted) {
+          t.start();
+          wasStarted = true;
+        }
+        else
+          playIt.playMore();
       }//end actionPerformed
     });//end actionlistener
+    //********************End Play Button************
     
+    //*********************Stop Button **************
     button3 = new JButton("Stop");
     button3.addActionListener(new ActionListener() { 
       public void actionPerformed(ActionEvent e) {
-        SoundPlay.pleaseStop();
-        t.yield();
+        playIt.pleaseStop();
       }
     });
+    //***********************End Stop Button**********
     
     //Places the buttons and text field on a panel
     aPanel = new JPanel();
@@ -81,7 +91,12 @@ public class Console {
   }//end Console constructor
   
   public static void main(String[] args) {
-    Console console = new Console();
+    SwingUtilities.invokeLater(new Runnable() {
+      @Override
+      public void run() {
+        new Console();
+      }
+    });
   }//end main 
   
   public static String getFileName() {
@@ -90,13 +105,14 @@ public class Console {
 }//end class Console
 
 //************SoundPlay Thread Class*******************
-class SoundPlay extends Thread {
+class SoundPlay implements Runnable {
   
   public static SourceDataLine soundLine = null;
+  private int BUFFER_SIZE = 64*1024;
   
   public void run() {
     File soundFile = new File(Console.getFileName());
-    int BUFFER_SIZE = 64*1024;
+    
     try {
       AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(soundFile);
       AudioFormat aFormat = audioInputStream.getFormat();
@@ -113,7 +129,7 @@ class SoundPlay extends Thread {
         if(nBytesRead >= 0) {
           soundLine.write(sampledData, 0, nBytesRead);
         }
-      }
+      }//end while read audioInputStream
     }//end try audio input stream
     catch (UnsupportedAudioFileException ex) {
       ex.printStackTrace();
@@ -130,5 +146,9 @@ class SoundPlay extends Thread {
   
   public static void pleaseStop() {
     soundLine.stop();
+  }//end pleaseStop method
+  
+  public static void playMore() {
+    soundLine.start();
   }
 }//SoundPlay class
