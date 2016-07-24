@@ -90,6 +90,7 @@ public class Console {
     frame.setVisible(true);
   }//end Console constructor
   
+  //*****************Main Method****************
   public static void main(String[] args) {
     SwingUtilities.invokeLater(new Runnable() {
       @Override
@@ -98,6 +99,7 @@ public class Console {
       }
     });
   }//end main 
+  
   
   public static String getFileName() {
     return fileName;
